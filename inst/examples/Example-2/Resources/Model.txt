@@ -1,0 +1,112 @@
+********** MODEL NAME
+
+model_PKPDcombo_3cpt_Emax_Bliss
+
+********** MODEL NOTES
+
+Library model for SCID mouse combo PKPD modeling.
+PK		3 compartmental distribution model
+non-linear (linear+saturable)
+1st order absorption
+PK DDI	Mutual elimination inhibition in a competitive manner.
+PD		Emax model
+PD DDI Empirical Bliss independence model.
+Gamma: interaction parameter with 1 for Bliss independence, <1 Bliss antagonism, >1 Bliss synergy
+Emax of drug 1 assumed to be the larger Emax
+Important assumption: INPUT dose (mg or mg/kg) and PK model matched to lead to drug
+concentration in ug/mL!
+
+********** MODEL STATES
+
+d/dt(Adx1) = -kax1*Adx1 + Fabs1x1*factorUnits*INPUT1
+d/dt(Acx1) = kax1*Adx1 - Q1x1/Vcx1*Acx1 + Q1x1/Vp1x1*Ap1x1 - Q2x1/Vcx1*Acx1 + Q2x1/Vp2x1*Ap2x1 - CLx1*Ccx1/Inh21 - (VMAXx1*Ccx1)/(KMx1*Inh21+Ccx1)
+d/dt(Ap1x1) = Q1x1/Vcx1*Acx1 - Q1x1/Vp1x1*Ap1x1
+d/dt(Ap2x1) = Q2x1/Vcx1*Acx1 - Q2x1/Vp2x1*Ap2x1
+d/dt(Adx2) = -kax2*Adx2 + Fabs1x2*factorUnits*INPUT2
+d/dt(Acx2) = kax2*Adx2 - Q1x2/Vcx2*Acx2 + Q1x2/Vp1x2*Ap1x2 - Q2x2/Vcx2*Acx2 + Q2x2/Vp2x2*Ap2x2 - CLx2*Ccx2/Inh12 - (VMAXx2*Ccx2)/(KMx2*Inh12+Ccx2)
+d/dt(Ap1x2) = Q1x2/Vcx2*Acx2 - Q1x2/Vp1x2*Ap1x2
+d/dt(Ap2x2) = Q2x2/Vcx2*Acx2 - Q2x2/Vp2x2*Ap2x2
+d/dt(PL) = GR - Kkill
+ 
+Adx1(0) = 0
+Acx1(0) = 0
+Ap1x1(0) = 0
+Ap2x1(0) = 0
+Adx2(0) = 0
+Acx2(0) = 0
+Ap1x2(0) = 0
+Ap2x2(0) = 0
+PL(0) = PLbase+PLerr
+ 
+********** MODEL PARAMETERS
+
+Fabs1x1 = 1 # Relative bioavailability Drug1 (-)
+kax1 = 0.1 # Absorption rate parameter Drug1 (1/hour)
+CLx1 = 0 # Apparent clearance Drug1 (L/hour)
+VMAXx1 = 0 # Maximum apparent clearance rate Drug1 (mg/hour)
+KMx1 = 10 # Michaelis-Menton constant Drug1 (ug/mL)
+Vcx1 = 1 # Apparent central volume Drug1 (L)
+Q1x1 = 0 # Apparent intercompartmental clearance Drug1 (L/hour)
+Vp1x1 = 10 # Apparent peripheral volume Drug1 (L)
+Q2x1 = 0 # Apparent intercompartmental clearance to second peripheral compartment Drug1 (L/hour)
+Vp2x1 = 10 # Apparent second peripheral volume Drug1 (L)
+Tlag1x1 = 0 # Absorption lag time Drug1 (hours)
+Fabs1x2 = 1 # Relative bioavailability Drug2 (-)
+kax2 = 0.1 # Absorption rate parameter Drug2 (1/hour)
+CLx2 = 0 # Apparent clearance Drug2 (L/hour)
+VMAXx2 = 0 # Maximum apparent clearance rate Drug2 (mg/hour)
+KMx2 = 10 # Michaelis-Menton constant Drug2 (ug/mL)
+Vcx2 = 1 # Apparent central volume Drug2 (L)
+Q1x2 = 0 # Apparent intercompartmental clearance Drug2 (L/hour)
+Vp1x2 = 10 # Apparent peripheral volume Drug2 (L)
+Q2x2 = 0 # Apparent intercompartmental clearance to second peripheral compartment Drug2 (L/hour)
+Vp2x2 = 10 # Apparent second peripheral volume Drug2 (L)
+Tlag1x2 = 0 # Absorption lag time Drug2 (hours)
+Ki12 = 1e+100 # Inhibition constant of Drug2 by Drug1
+Ki21 = 1e+100 # Inhibition constant of Drug1 by Drug2
+PLbase = 0 # Log-transformed baseline parasitemia (percent or 1/mL)
+PLerr = 0 # Individual deviation from baseline parasitemia
+GR = 0.05 # Net parasite growth rate (1/hour)
+EMAXx1 = 0.1 # Maximum clearance rate Drug1 (1/hour)
+EC50x1 = 0.1 # Concentration achieving 50percent of maximum effect Drug1 (ug/mL)
+hillx1 = 1 # Hill coefficient Drug1 (.)
+EMAXx2 = 0.1 # Maximum clearance rate Drug2 (1/hour)
+EC50x2 = 0.1 # Concentration achieving 50percent of maximum effect Drug2 (ug/mL)
+hillx2 = 1 # Hill coefficient Drug2 (.)
+Gamma = 1 # Bliss independence interaction parameter (-)
+factorUnits = 1
+yps = 1e-06
+INPUT1 = 0
+Tlag1 = 0
+INPUT2 = 0
+Tlag2 = 0
+ 
+********** MODEL VARIABLES
+
+Ccx1 = Acx1/Vcx1
+Ccx1EPS = Ccx1+yps
+Ccx2 = Acx2/Vcx2
+Ccx2EPS = Ccx2+yps
+Inh12 = (1+Ccx1/Ki12)
+Inh21 = (1+Ccx2/Ki21)
+frac = 1/(1+(EMAXx1/EMAXx2)^20)
+KillMin = frac * EMAXx1 + (1-frac) * EMAXx2
+RD11 = Ccx1EPS^hillx1/(EC50x1^hillx1+Ccx1EPS^hillx1)
+RD22 = Ccx2EPS^hillx2/(EC50x2^hillx2+Ccx2EPS^hillx2)
+Effx1 = RD11
+Effx2 = RD22
+Kkillx1 = EMAXx1*Effx1
+Kkillx2 = EMAXx2*Effx2
+Kkill = Kkillx1 + Kkillx2 - Gamma * Effx1*Effx2 * KillMin
+OUTPUT1 = PL
+ 
+********** MODEL REACTIONS
+
+ 
+********** MODEL FUNCTIONS
+
+ 
+********** MODEL EVENTS
+
+ 
+

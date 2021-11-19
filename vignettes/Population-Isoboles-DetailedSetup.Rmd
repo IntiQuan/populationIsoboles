@@ -1,0 +1,275 @@
+---
+title: "Population-Isoboles-DetailedSetup"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Population-Isoboles-DetailedSetup}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(populationIsoboles)
+library(ggplot2)
+if(!require("MASS")) {install.packages("MASS"); library(MASS)}
+if(!require("dMod")) {install.packages("dMod"); library(dMod)}
+.outputFolder <- "Output"
+```
+
+# Introduction
+
+An R-script version of this vignette and the resources are available in the folder `system.file("examples/Example-1", package = "populationIsoboles")`
+
+This vignette is ideal if you want to set up a complex simulation which requires an adaption of the `runPopulationIsoboles` function's internals.
+It will hint to some extra details for the implementation
+
+This vignette demonstrates how to use the fast isobole algorithm `grid_refinement` in the context of population simulation of NLME models.
+The underlying PKPD model describes malaria parasite clearance by two drugs acting jointly.
+Implementing the model is very explicit in this vignette to showcase which functionality is needed for the population isobole simulation.
+The relevant steps for model implementation are: 
+
+1. Set up model for one parameter set
+2. Set up simulation function with binary outputs: success = 1, failure = 0
+3. Define function to simulate model for multiple parameter sets
+4. Define objective function which evaluates success rates for multiple doses, given a parameter set
+
+Implementing the parameter sampling has also been made explicit and presents the simplest form of Monte-Carlo sampling for NLME models.
+The following five steps outline the parameter sampling procedure. 
+Note that in this vignette, steps 2 and 3 were swapped, essentially meaning that in this case, the random effects have no uncertainty.
+
+1. Define population parameters `theta` and the corresponding uncertainties encoded as covariance matrix `S`
+2. Sample one population parameter vector based on the multivariate normal distribution parameterized by `theta` and `S`
+3. Define covariance matrix of random effects `Omega`
+4. Sample `Nsubj` realizations of random effects based on `Omega` and define "Individual" by adding the random effects to the fixed effects.
+  In this case, random effects are added on log-scale
+5. Repeat 2-4 for `Npop` populations.
+
+The setup of the model is made this explicit, because the fast isoboles algorithm `grid_refinement` needs to reuse the individual parameters.
+Therefore, all stochastic sampling needs to be performed separately from the simulation.
+
+The population isoboles simulation is shown explicitly to highlight the most relevant steps and arguments.
+Finally, three different visualizations are shown.
+
+
+# Load Model and Parameter information
+```{r model}
+# .. Model -----
+model <- source("Resources/modelDeparsed.R")$value
+# .. Parameter information -----
+parameterInfo <- source("Resources/parametersDeparsed.R")$value
+print(parameterInfo$theta[1:4]) # Theta = Point estimates of fixed effects
+print(parameterInfo$S[1:4,1:4])     # S     = Covariance matrix for Theta
+print(parameterInfo$Omega[1:4,1:4]) # Omega = Covariance matrix of random effects
+
+# .. Show the basic PKPD model for one parameter -----
+pars_doses <- c(AMTx1 = 500, AMTx2 = 500)
+simtime    <- seq(0,24*28,24)
+sim <- model(simtime, c(parameterInfo$theta, pars_doses))
+plot(sim) +  
+  geom_hline(yintercept = log(10), linetype = 2, color = "blue") + 
+  annotate("text", 600, 3, label = "LLOQ", color = "blue") + 
+  labs(x = "Time [h]", y  = "log Parasites / mL") + 
+  guides(color = FALSE)
+```
+
+# Define functions to simulate populations
+```{r populationSimulationFunctions}
+# .. Parameter sampling -----
+
+#' Sample realizations of population parameters
+samplePopPars <- function(Nsubj, theta, S) {
+  thetapars <- MASS::mvrnorm(1, mu = theta , Sigma = S)
+  thetapars <- matrix(thetapars, nrow = Nsubj, ncol = length(theta), byrow = TRUE)
+  thetapars
+}
+
+#' Sample realizations of random effects
+sampleEtas <- function(Nsubj, Omega) {
+  etas <- MASS::mvrnorm(Nsubj, mu = rep(0, dim(Omega)[1]) , Sigma = Omega)
+  etas
+}
+
+#' Function to simulate individual parameters
+#'
+#' Draws a set of population parameters and adds random effects on log-scale
+#'
+#' @param Nsubj Numeric, number of subjects to sample
+#' @param theta Population parameter vector
+#' @param S     Covariance matrix for theta
+#' @param Omega Covariance matrix for random effects
+#'
+#' @return matrix[individuals, parameters]
+sampleIndividuals <- function(Nsubj, theta, S, Omega) {
+  exp(log(samplePopPars(Nsubj,theta,S)) + sampleEtas(Nsubj, Omega))
+}
+
+#' Add dosing information to parameters
+#'
+#' Replicates parsIndiv for each dose combination
+#'
+#' @param AMTx1,AMTx2 Vectors of sample length with the respective doses
+#' e.g. AMTx1[1] and AMTx2[1] are the first dose combination
+#' @param parsIndiv output of [sampleIndividuals()]
+#'
+#' @return matrix with length(AMTx1) * nrow(parsIndiv) rows
+expandParametersWithDosing <- function(AMTx1, AMTx2, parsIndiv) {
+  doses_expanded <- matrix(rep(c(AMTx1,AMTx2), each = nrow(parsIndiv)), ncol = 2)
+  doses_expanded <- `colnames<-`(doses_expanded, c("AMTx1", "AMTx2"))
+  pars_expanded <- do.call(rbind, lapply(1:length(AMTx1), function(x) parsIndiv))
+  pars <- cbind(doses_expanded, pars_expanded)
+}
+
+
+# .. Model simulation -----
+
+#' simulate the model for one parameter set and decide if the patient is cured
+#'
+#' Cure criterion: log Parasite concentration BLOQ (< log10) at 28 days
+#'
+#' @param pars0
+#'
+#' @return logical(1L), TRUE = "cure", FALSE = "no cure"
+simModelBinaryOutput <- function(pars0) {
+  prediction <- (prd)(seq(0,24*28, 24), pars0, deriv = FALSE)[[1]]
+  prediction <- prediction[nrow(prediction), "OUTPUT1", drop  = TRUE]
+  cure28 <- prediction < log(10)
+  cure28
+}
+
+#' Simulate model for a population
+#'
+#' @param pars matrix[individuals,c(dosingParameters, individualParameters)]
+#'   Each row corresponds to one simulation, determined by all parameters in this row
+#'   The columns of this matrix need to be all model parameters +  the dosing parameters AMTx1, AMTx2
+#'
+#' @return logical(nrow(individuals)) indicating if a subject is cured or not
+simModelMultiplePars <- function(pars) {
+  # Best to parallelize this step, but this created problems in the vignette building...
+  iscured <- lapply(
+    X = seq_len(nrow(pars)), FUN = function(i) {
+      pars <- pars[i,,drop = TRUE]
+      simModelBinaryOutput(pars)
+    })
+  do.call(c, iscured)
+}
+
+#' Final objective function to evaluate the cure rate
+#'
+#' @param AMTx1,AMTx2 Vectors of sample length with the respective doses
+#'   e.g. AMTx1[1] and AMTx2[1] are the first dose combination
+#' @param parsIndiv Output from [sampleIndividuals()]
+#'
+#' @return Vector of length(AMTx1), indicating the success rate at the dose
+#'   combinations given by AMTx1,AMTx2
+#' @export
+objectiveFunction <- function(AMTx1,AMTx2, parsIndiv) {
+  pars <- expandParametersWithDosing(AMTx1, AMTx2, parsIndiv)
+  simres <- simModelMultiplePars(pars)
+  cureRates <- vapply(seq_along(AMTx1), function(dose_i) {
+    mean(simres[(dose_i-1)*nrow(parsIndiv) + 1:nrow(parsIndiv)])},
+    FUN.VALUE = 0.1)
+  cureRates
+}
+
+# .. Illustrate parameter sampling and model simulation -----
+# Parameters of individual subjects of one population
+set.seed(1234)
+indivPars <- do.call(sampleIndividuals, c(list(N = 10), parameterInfo))
+# Add dosing information, dose drug1 400mg, drug2 200 mg
+pars <- cbind(AMTx1 = 500, AMTx2 = 500, indivPars)
+print(simModelMultiplePars(pars)) # 4 out of 10 subjects are cured
+# Evaluate objective function at two doses
+AMTx1 <- c(500, 500)
+AMTx2 <- c(300, 500)
+print(objectiveFunction(AMTx1, AMTx2, indivPars))
+```
+
+# Run population isoboles
+```{r}
+# .. Additional Information for isobole simulation ----
+# Determine maximum doses
+# Need to have it in the format provided by the function below
+gridInfo <- populationIsoboles:::gridInfo_default(AMTx1Max = 5000, AMTx2Max = 5000, imax = 5, offset = 0)
+# Target cure rate in each population
+objectiveValue <- 0.95 
+
+# .. Population isobole simulation function -----
+# Loop over populations:
+# 1. Sample Individuals of this population
+# 2. Run grid_refinement, the fast isobole algorithm
+# 3. Save results into .outputFolder/Simulations
+run_PopulationIsoboles <- function(
+  Npop, Nsubj,
+  gridInfo, objectiveValue,
+  objectiveFunction,
+  sampleIndividuals,
+  argsSampleIndividuals,
+  .outputFolder
+) {
+  dir.create(file.path(.outputFolder, "Simulations"), recursive = TRUE)
+  # Save gridInfo for later reuse. Need to save it under this exact name
+  saveRDS(gridInfo, file.path(.outputFolder, "Simulations", "001-GridInfo.rds"))
+
+  for (k in 1:Npop) {
+    # Sample parameters
+    parsIndiv <- do.call(sampleIndividuals, argsSampleIndividuals)
+    # Define objective function which only takes arguments (AMTx1, AMTx2) and 
+    #   has access to parsIndiv via the environment
+    obj <- function(AMTx1, AMTx2) {
+      objectiveFunction(AMTx1,AMTx2, parsIndiv)
+    }
+    # Run isobole algorithm for this population
+    grid_refinement(objfun = obj, objvalue = objectiveValue,
+                    gridmin = gridInfo$gridmin, gridmax = gridInfo$gridmax,
+                    imin = 5, imax = 5, FLAGverbose = FALSE, # Force 5 iterations
+                    k = k, .outputFolder = .outputFolder)
+    populationIsoboles:::PI_zip(populationIsoboles:::PI_files(.outputFolder, k)) # This step is useful if many populations are run. 
+  }
+}
+
+# .. Run the population isoboles function -----
+set.seed(1234)
+Nsubj <- 20
+run_PopulationIsoboles(
+  Npop = 3, Nsubj = Nsubj, # Values should be higher to appropriately sample the parameter space.
+                        # Needs powerful computer though
+  gridInfo          = gridInfo,
+  objectiveValue    = objectiveValue,
+  objectiveFunction = objectiveFunction,
+  sampleIndividuals = sampleIndividuals,
+  argsSampleIndividuals = c(list(Nsubj = Nsubj), parameterInfo),
+  .outputFolder     = .outputFolder
+)
+```
+
+# Plot results
+
+## Spaghetti plot of isoboles
+```{r, Spaghetti,fig.width=7,fig.height=5}
+plotSpaghetti(file.path(.outputFolder, "Simulations"))
+```
+
+## Spaghetti with confidence levels overlaid
+```{r, Quantiles,fig.width=7,fig.height=5}
+plotQuantiles(file.path(.outputFolder, "Simulations"))
+```
+
+## Confidence level response surface
+```{r, CLRS,fig.width=7,fig.height=5}
+plotCLRS(file.path(.outputFolder, "Simulations"))
+```
+
+
+# Clean up output folder
+```{r}
+unlink(.outputFolder, recursive = TRUE)
+```
+
+
+

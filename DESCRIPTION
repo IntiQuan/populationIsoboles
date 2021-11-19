@@ -1,0 +1,41 @@
+Package: populationIsoboles
+Type: Package
+Title: Calculate isoboles efficiently
+Version: 1.0.0
+Authors@R: c(
+	person("Daniel", "Lill", role = c("aut", "cre"), email = "daniel.lill@physik.uni-freiburg.de"),
+	person("Venelin", "Mitov", role = c("aut"), email = "venelin.mitov@intiquan.com"),
+	person("Mohammed", "Cherkaoui-Rbati", role = c("ctb")),
+	person("IntiQuan GmbH", role = c("fnd","cph"), email = "info@intiquan.com"),
+	person("Medicines for Malaria Venture", role = c("fnd", "cph"))
+    )
+Description: This package provides an algorithm to efficiently calculate 
+  isoboles, given a dose-response model. Furthermore, a vignette is provided
+  to show how population simulation and isoboles can be combined to 
+  obtain confidence level response surfaces of NLME models quickly.
+  If you are interested in the fast isoboles algorithm, take a look at the
+  examples of ?grid_refinement.
+  If you want to calculate confidence level response surfaces, take a look
+  at vignette("Population-Isoboles") for a generic example.
+License: AGPL-3
+Encoding: UTF-8
+LazyData: true
+Depends:
+  R (>= 3.5.0),
+  data.table
+Imports:
+  ggplot2,
+  stats,
+  sp,
+  akima,
+  zip
+URL: https://github.com/IntiQuan/populationIsoboles
+RoxygenNote: 7.1.0
+Suggests: 
+    knitr,
+    rmarkdown,
+    MASS,
+    dMod,
+    IQRtools,
+    testthat (>= 2.1.0)
+VignetteBuilder: knitr

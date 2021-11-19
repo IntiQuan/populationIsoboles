@@ -1,0 +1,140 @@
+---
+title: "Population-Isoboles"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Population-Isoboles}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(populationIsoboles)
+library(ggplot2)
+library(IQRtools)
+.outputFolder <- "Output"
+```
+
+# Introduction
+
+An R-script version of this vignette and the resources are available in the folder `system.file("examples/Example-2", package = "populationIsoboles")`
+
+This vignette demonstrates how to use the fast isobole algorithm `grid_refinement` in the context of population simulation of NLME models.
+The underlying PKPD model describes malaria parasite clearance by two drugs acting jointly.
+Implementing the model is less explicit than in the other vignette, where each step is outlined how to get from the individual simulation to the population isobole.
+With `IQRtools` out-of-the-box population simulation functionalities, one just needs to define the objective function which evaluates success rates for different doses, given a parameter set.
+More information on IQRtools is available at ![https://iqrtools.intiquan.com](https://iqrtools.intiquan.com)
+
+The population isoboles simulation uses `populationIsoboles::runPopulationIsoboles()` to calculate population isoboles.
+Finally, three different visualizations are shown.
+
+
+# Load Model and Parameter information
+```{r model}
+# .. Model -----
+model <- IQRmodel("Resources/Model.txt")
+
+# .. Parameter information -----
+parameterGPF <- load_GPF("Resources/Parameters.xlsx")
+
+# .. Show the basic PKPD model for one parameter -----
+dosing <- IQRdosing(c(0,0), c(1,2), c(500,500))
+pars <- sampleIndParamValues(parameterGPF)$typicalIndParamValues
+pars <- pars[setdiff(names(pars), c("ID", "ID.POP"))]
+pars <- cbind(pars, PLbase = 9.)
+simtime    <- seq(0,24*28,24)
+sim <- sim_IQRmodel(model, simtime = simtime,
+                    parameters = pars,
+                    dosingTable = dosing, FLAGoutputsOnly = TRUE)
+plot(sim) +
+  geom_hline(yintercept = log(10), linetype = 2, color = "blue") +
+  annotate("text", 600, 3, label = "LLOQ", color = "blue") +
+  labs(x = "Time [h]", y  = "log Parasites / mL") +
+  guides(color = FALSE)
+```
+
+# Define functions to simulate populations
+```{r populationSimulationFunctions}
+#' Simulate model and determin cure rate
+#'
+#' @param AMTx1,AMTx2 Vector of doses
+#' @param parsIndiv output from [IQRtools::sampleIndParamValues()]
+#'
+#' @return numeric(length(AMTx1)) with cure rates
+objectiveFunction <- function(AMTx1,AMTx2, parsIndiv) {
+  pars <- parsIndiv$indParamValues
+  pars <- pars[setdiff(names(pars), "ID.POP")]
+  # Optimal opportunity to parallelize simulations
+  cureRates <- lapply(
+    X = seq_along(AMTx1),FUN = function(i) {
+      dosing <- IQRdosing(rep(0, length(AMTx1[i])*2),
+                          ADM = rep(c(1,2), each = length(AMTx1[i])),
+                          AMT = c(AMTx1[i], AMTx2[i]))
+      eventTable <- create_IQReventTable(dosing, pars)
+      sim <- sim_IQRmodel(model,simtime = seq(0,24*28,24),
+                          eventTable = eventTable,
+                          FLAGoutputsOnly = TRUE)
+      PLfinal <- sim[sim$TIME==24*28, "OUTPUT1"]
+      mean(PLfinal < log(10)) # Parasitemia less than 10parasites/mL
+    })
+  unlist(cureRates)
+}
+
+# Illustrate ObjectiveFunction
+parsIndiv <- sampleIndParamValues(parameterGPF, NULL, 10, Npop = 1)
+AMTx1 <- AMTx2 <- c(100,500)
+objectiveFunction(AMTx1, AMTx2, parsIndiv)
+```
+
+# Run population isoboles
+```{r}
+set.seed(1234)
+# Nsubj and Npop Values should be higher to appropriately
+# sample the parameter space. Needs powerful computer though
+Npop <- 3
+Nsubj <- 20
+objectiveValue <- 0.95 # Target cure rate in each population
+runPopulationIsoboles(
+  Npop                  = Npop,
+  Nsubj                 = Nsubj,
+  gridInfo              = list(AMTx1Max = 5000, AMTx2Max = 5000),
+  objectiveValue        = objectiveValue,
+  objectiveFunction     = objectiveFunction,
+  sampleIndividuals     = sampleIndParamValues,
+  argsSampleIndividuals = list(spec = parameterGPF, Nsamples = Nsubj),
+  FLAGverbose           = TRUE,
+  .outputFolder         = .outputFolder
+)
+```
+
+# Plot results
+
+## Spaghetti plot of isoboles
+```{r, Spaghetti,fig.width=7,fig.height=5}
+plotSpaghetti(file.path(.outputFolder, "Simulations"))
+```
+
+## Spaghetti with confidence levels overlaid
+```{r, Quantiles,fig.width=7,fig.height=5}
+plotQuantiles(file.path(.outputFolder, "Simulations"))
+```
+
+## Confidence level response surface
+```{r, CLRS,fig.width=7,fig.height=5}
+plotCLRS(file.path(.outputFolder, "Simulations"))
+```
+
+
+# Clean up output folder
+```{r}
+unlink(.outputFolder, recursive = TRUE)
+```
+
+
+
