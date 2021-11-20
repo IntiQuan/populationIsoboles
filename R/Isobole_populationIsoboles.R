@@ -9,7 +9,7 @@
 #' @param sampleIndividuals Function to sample individual parameters
 #' @param argsSampleIndividuals List of arguments for `sampleIndividuals`
 #' @param gridInfo A list(AMTx1Max, AMTx2Max), specifying the searched grid dimensions
-#' @param itermax Number of iterations for grid_refinement algorithm
+#' @param itermax Number of iterations for fastIsoboles algorithm
 #' @param .outputFolder Path to store results in
 #' @param FLAGverbose print messages to console?
 #'
@@ -52,7 +52,7 @@ runPopulationIsoboles <- function(
       objectiveFunction(AMTx1,AMTx2, parsIndiv)
     }
     # Run isobole algorithm for this population
-    grid_refinement(objfun = obj, objvalue = objectiveValue,
+    fastIsoboles(objfun = obj, objvalue = objectiveValue,
                     gridmin = gridInfo$gridmin, gridmax = gridInfo$gridmax,
                     imin = 5, imax = itermax, FLAGverbose = FLAGverbose,
                     k = k, .outputFolder = .outputFolder)

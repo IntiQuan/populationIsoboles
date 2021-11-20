@@ -29,7 +29,7 @@ An R-script version of this vignette and the resources are available in the fold
 This vignette is ideal if you want to set up a complex simulation which requires an adaption of the `runPopulationIsoboles` function's internals.
 It will hint to some extra details for the implementation
 
-This vignette demonstrates how to use the fast isobole algorithm `grid_refinement` in the context of population simulation of NLME models.
+This vignette demonstrates how to use the fast isobole algorithm `fastIsoboles` in the context of population simulation of NLME models.
 The underlying PKPD model describes malaria parasite clearance by two drugs acting jointly.
 Implementing the model is very explicit in this vignette to showcase which functionality is needed for the population isobole simulation.
 The relevant steps for model implementation are: 
@@ -50,7 +50,7 @@ Note that in this vignette, steps 2 and 3 were swapped, essentially meaning that
   In this case, random effects are added on log-scale
 5. Repeat 2-4 for `Npop` populations.
 
-The setup of the model is made this explicit, because the fast isoboles algorithm `grid_refinement` needs to reuse the individual parameters.
+The setup of the model is made this explicit, because the fast isoboles algorithm `fastIsoboles` needs to reuse the individual parameters.
 Therefore, all stochastic sampling needs to be performed separately from the simulation.
 
 The population isoboles simulation is shown explicitly to highlight the most relevant steps and arguments.
@@ -202,7 +202,7 @@ objectiveValue <- 0.95
 # .. Population isobole simulation function -----
 # Loop over populations:
 # 1. Sample Individuals of this population
-# 2. Run grid_refinement, the fast isobole algorithm
+# 2. Run fastIsoboles, the fast isobole algorithm
 # 3. Save results into .outputFolder/Simulations
 run_PopulationIsoboles <- function(
   Npop, Nsubj,
@@ -225,7 +225,7 @@ run_PopulationIsoboles <- function(
       objectiveFunction(AMTx1,AMTx2, parsIndiv)
     }
     # Run isobole algorithm for this population
-    grid_refinement(objfun = obj, objvalue = objectiveValue,
+    fastIsoboles(objfun = obj, objvalue = objectiveValue,
                     gridmin = gridInfo$gridmin, gridmax = gridInfo$gridmax,
                     imin = 5, imax = 5, FLAGverbose = FALSE, # Force 5 iterations
                     k = k, .outputFolder = .outputFolder)

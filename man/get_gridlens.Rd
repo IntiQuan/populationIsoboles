@@ -25,10 +25,10 @@ populationIsoboles:::get_gridlens(gridmin, gridmax)
 \seealso{
 Other Grid refinement functions for isoboles: 
 \code{\link{arrange_isobole_internal}()},
-\code{\link{get_isobole_path}()},
-\code{\link{grid_refinement_iteration0}()},
-\code{\link{grid_refinement_iteration}()},
-\code{\link{grid_refinement}()}
+\code{\link{fastIsoboles_iteration0}()},
+\code{\link{fastIsoboles_iteration}()},
+\code{\link{fastIsoboles}()},
+\code{\link{get_isobole_path}()}
 }
 \author{
 Daniel Lill, IntiQuan \email{daniel.lill@intiquan.com}

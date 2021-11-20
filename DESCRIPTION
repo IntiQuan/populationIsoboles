@@ -14,7 +14,7 @@ Description: This package provides an algorithm to efficiently calculate
   to show how population simulation and isoboles can be combined to 
   obtain confidence level response surfaces of NLME models quickly.
   If you are interested in the fast isoboles algorithm, take a look at the
-  examples of ?grid_refinement.
+  examples of ?fastIsoboles.
   If you want to calculate confidence level response surfaces, take a look
   at vignette("Population-Isoboles") for a generic example.
 License: AGPL-3
@@ -30,7 +30,7 @@ Imports:
   akima,
   zip
 URL: https://github.com/IntiQuan/populationIsoboles
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Suggests: 
     knitr,
     rmarkdown,

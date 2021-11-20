@@ -316,7 +316,7 @@ arrange_isobole <- function(iso_unordered, yps = 1e-9) {
 #' outside of the polygon enclosed by the isobole and the coordinate axes.
 #'
 #' @param path data.table(xp,yp), e.g. output from [get_isobole_path()]
-#' @param gridmin,gridmax,gridlens,imax See [grid_refinement_iteration()] or [gridInfo_default()]
+#' @param gridmin,gridmax,gridlens,imax See [fastIsoboles_iteration()] or [gridInfo_default()]
 #' @param i Current iteration to subset gridlens
 #'
 #' @return A number between 0 and 1
@@ -353,10 +353,10 @@ get_area <- function(path, i, gridmin, gridmax, gridlens, imax){
 #' The dummy path contains all grid points ensuring that all points of the grid in iteration 1 lie close to the path.
 #' The dummy grid contains contains all grid points but evaluatedCum is set to zero, therefore the points will be evaluated next time.
 #'
-#' @param gridmin,gridmax as in grid_refinement_iteration
-#' @param gridlen_i,i as in grid_refinement_iteration. gridlen_i and i are only there for backward compatibility
+#' @param gridmin,gridmax as in fastIsoboles_iteration
+#' @param gridlen_i,i as in fastIsoboles_iteration. gridlen_i and i are only there for backward compatibility
 #'
-#' @return list with grid and path as explained in the Arguments-section of grid_refinement_iteration
+#' @return list with grid and path as explained in the Arguments-section of fastIsoboles_iteration
 #'
 #' @author Daniel Lill, IntiQuan \email{daniel.lill@@intiquan.com}
 #' @family Grid refinement functions for isoboles
@@ -364,8 +364,8 @@ get_area <- function(path, i, gridmin, gridmax, gridlens, imax){
 #' @importFrom data.table data.table copy ":="
 #'
 #' @examples
-#' populationIsoboles:::grid_refinement_iteration0(c(x = 0,y = 0), c(x = 16,y = 16), c(x = 8,y = 8))
-grid_refinement_iteration0 <- function(gridmin, gridmax, gridlen_i = (gridmax-gridmin)/2, i = 0) {
+#' populationIsoboles:::fastIsoboles_iteration0(c(x = 0,y = 0), c(x = 16,y = 16), c(x = 8,y = 8))
+fastIsoboles_iteration0 <- function(gridmin, gridmax, gridlen_i = (gridmax-gridmin)/2, i = 0) {
   grid <- data.table(expand.grid(x = seqminmax(gridmin["x"],gridmax["x"],gridlen_i["x"]), y = seqminmax(gridmin["y"],gridmax["y"],gridlen_i["y"])))
   grid[,`:=`(evaluatedCum = 0, objvalueCum = NA, objvalue0 = NA, evaluated0 = 0)]
 
@@ -399,8 +399,8 @@ grid_refinement_iteration0 <- function(gridmin, gridmax, gridlen_i = (gridmax-gr
 #'
 #'
 #' @examples
-#' # see grid_refinement()
-grid_refinement_iteration <- function(gridmin, gridmax, gridlen_i,
+#' # see fastIsoboles()
+fastIsoboles_iteration <- function(gridmin, gridmax, gridlen_i,
                                       path_j, grid_j,
                                       i, objfun, objvalue = 0.95) {
 
@@ -458,7 +458,7 @@ grid_refinement_iteration <- function(gridmin, gridmax, gridlen_i,
 
 #' Grid refinement algorithm to calculate isoboles
 #'
-#' @inheritParams grid_refinement_iteration
+#' @inheritParams fastIsoboles_iteration
 #' @param imin,imax minimum/maximum number of iterations
 #' @param k index of population for outputting the current isobole iteration to the disk
 #' @param areaterm Terminate when the area above the curve (bounded by the grid) doesn't change more than this value (on relative scale)
@@ -500,7 +500,7 @@ grid_refinement_iteration <- function(gridmin, gridmax, gridlen_i,
 #'   geom_contour(aes(color = ..level..))
 #'
 #' # Run algorithm
-#' isobole <- grid_refinement( objfun1,0.95,gridmin, gridmax, 5,7)
+#' isobole <- fastIsoboles( objfun1,0.95,gridmin, gridmax, 5,7)
 #' # Plot algo results
 #' ggplot() + geom_tile(data = isobole$grid, aes(x,y,fill = objvalueCum)) +
 #'   geom_path(data = isobole$pathlist[[5]], aes(xp,yp)) +
@@ -522,20 +522,20 @@ grid_refinement_iteration <- function(gridmin, gridmax, gridlen_i,
 #'   geom_path(data = isobole$pathlist[[5]], aes(xp,yp))
 #'
 #' # Run algorithm - different objvalue - Level
-#' isobole <- grid_refinement(objfun1, 0.5,gridmin, gridmax, 5,7)
+#' isobole <- fastIsoboles(objfun1, 0.5,gridmin, gridmax, 5,7)
 #' # Plot algo results
 #' ggplot() + geom_tile(data = isobole$grid, aes(x,y,fill = objvalueCum)) +
 #'   geom_path(data = isobole$pathlist[[5]], aes(xp,yp)) + scale_fill_viridis_c()
 #'
 #' # Run algorithm - lower imin
-#' isobole <- grid_refinement(objfun1,0.95, gridmin, gridmax, 3,7)
+#' isobole <- fastIsoboles(objfun1,0.95, gridmin, gridmax, 3,7)
 #' isobole$itermax
 #' # Plot algo results
 #' ggplot() + geom_tile(data = isobole$grid, aes(x,y,fill = objvalueCum)) +
 #'   geom_path(data = isobole$pathlist[[3]], aes(xp,yp)) + scale_fill_viridis_c()
 #'
 #' # Run algorithm - lower imin & imax
-#' isobole <- grid_refinement(objfun1,0.95, gridmin, gridmax, 3,3)
+#' isobole <- fastIsoboles(objfun1,0.95, gridmin, gridmax, 3,3)
 #' isobole$itermax
 #' # Plot algo results
 #' ggplot() + geom_tile(data = isobole$grid, aes(x,y,fill = objvalueCum)) +
@@ -543,13 +543,13 @@ grid_refinement_iteration <- function(gridmin, gridmax, gridlen_i,
 #'
 #' # Run algorithm - Different function
 #' objfun2 <- function(x,y) {(x+500)*(y+5)/(80^2)}
-#' isobole <- grid_refinement(objfun2,0.95, gridmin, gridmax, 3,7)
+#' isobole <- fastIsoboles(objfun2,0.95, gridmin, gridmax, 3,7)
 #' isobole$itermax
 #' # Plot algo results
 #' ggplot() + geom_tile(data = isobole$grid, aes(x,y,fill = objvalueCum)) +
 #'   geom_path(data = isobole$pathlist[[3]], aes(xp,yp)) + scale_fill_viridis_c()
 #'
-grid_refinement <- function(objfun, objvalue = 0.95,
+fastIsoboles <- function(objfun, objvalue = 0.95,
                             gridmin = c(x=0,y=0),
                             gridmax = c(x=1,y=1),
                             imin = 5, imax = 7,
@@ -559,7 +559,7 @@ grid_refinement <- function(objfun, objvalue = 0.95,
 ) {
   # 1 Initialize
   gridlens    <- get_gridlens(gridmin, gridmax, imax)
-  dummy       <- grid_refinement_iteration0(gridmin, gridmax, gridlen_i = gridlens[[1]], 0)
+  dummy       <- fastIsoboles_iteration0(gridmin, gridmax, gridlen_i = gridlens[[1]], 0)
   grid        <- dummy$grid
   path        <- dummy$path
   outsideGrid <- dummy$outsideGrid
@@ -572,7 +572,7 @@ grid_refinement <- function(objfun, objvalue = 0.95,
     if (FLAGverbose) cat(paste(Sys.time()), " ---- Iteration", i, "----------")
     # .. 1 Calculate new values
     if (FLAGverbose) cat("[-   ]")
-    dummy <- grid_refinement_iteration(gridmin = gridmin, gridmax = gridmax, gridlen_i = gridlens[[i]],
+    dummy <- fastIsoboles_iteration(gridmin = gridmin, gridmax = gridmax, gridlen_i = gridlens[[i]],
                                        path_j = path, grid_j = grid,
                                        i = i, objfun  = objfun, objvalue = objvalue)
     grid <- dummy$grid
@@ -779,7 +779,7 @@ grid_refinement <- function(objfun, objvalue = 0.95,
 #' Output the results of the grid-refinement algorithm in a standardized manner
 #'
 #' @md
-#' @param isobole result of [grid_refinement()]
+#' @param isobole result of [fastIsoboles()]
 #' @param k Identifier of the current population
 #' @param .outputFolder output folder where the results are stored. Will save the results in a subdirectory called "Simulate
 #'

@@ -33,7 +33,7 @@ where AMTx1, AMTx2 are numeric vectors and parsIndiv is the output of the suppli
 
 \item{gridInfo}{A list(AMTx1Max, AMTx2Max), specifying the searched grid dimensions}
 
-\item{itermax}{Number of iterations for grid_refinement algorithm}
+\item{itermax}{Number of iterations for fastIsoboles algorithm}
 
 \item{FLAGverbose}{print messages to console?}
 

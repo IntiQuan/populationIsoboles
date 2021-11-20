@@ -7,7 +7,7 @@
 output_gridrefinement_results(isobole, k, .outputFolder)
 }
 \arguments{
-\item{isobole}{result of \code{\link[=grid_refinement]{grid_refinement()}}}
+\item{isobole}{result of \code{\link[=fastIsoboles]{fastIsoboles()}}}
 
 \item{k}{Identifier of the current population}
 

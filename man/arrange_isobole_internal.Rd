@@ -56,11 +56,11 @@ ggplot()  + geom_tile(aes(x,y, fill = inpoly_ordered), grid) +
 }
 \seealso{
 Other Grid refinement functions for isoboles: 
+\code{\link{fastIsoboles_iteration0}()},
+\code{\link{fastIsoboles_iteration}()},
+\code{\link{fastIsoboles}()},
 \code{\link{get_gridlens}()},
-\code{\link{get_isobole_path}()},
-\code{\link{grid_refinement_iteration0}()},
-\code{\link{grid_refinement_iteration}()},
-\code{\link{grid_refinement}()}
+\code{\link{get_isobole_path}()}
 }
 \author{
 Daniel Lill, IntiQuan \email{daniel.lill@intiquan.com}

@@ -11,7 +11,7 @@ get_area(path, i, gridmin, gridmax, gridlens, imax)
 
 \item{i}{Current iteration to subset gridlens}
 
-\item{gridmin, gridmax, gridlens, imax}{See \code{\link[=grid_refinement_iteration]{grid_refinement_iteration()}} or \code{\link[=gridInfo_default]{gridInfo_default()}}}
+\item{gridmin, gridmax, gridlens, imax}{See \code{\link[=fastIsoboles_iteration]{fastIsoboles_iteration()}} or \code{\link[=gridInfo_default]{gridInfo_default()}}}
 }
 \value{
 A number between 0 and 1

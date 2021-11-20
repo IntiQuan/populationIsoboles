@@ -175,7 +175,7 @@ objectiveValue <- 0.95 # Target cure rate in each population
 # .. Population isobole simulation function -----
 # Loop over populations:
 # 1. Sample Individuals of this population
-# 2. Run grid_refinement, the fast isobole algorithm
+# 2. Run fastIsoboles, the fast isobole algorithm
 # 3. Save results into .outputFolder/Simulations
 runPopulationIsoboles <- function(
   Npop, Nsubj,
@@ -198,7 +198,7 @@ runPopulationIsoboles <- function(
       objectiveFunction(AMTx1,AMTx2, parsIndiv)
     }
     # Run isobole algorithm for this population
-    grid_refinement(objfun = obj, objvalue = objectiveValue,
+    fastIsoboles(objfun = obj, objvalue = objectiveValue,
                     gridmin = gridInfo$gridmin, gridmax = gridInfo$gridmax,
                     imin = 5, imax = 5, FLAGverbose = FALSE, # Force 5 iterations
                     k = k, .outputFolder = .outputFolder)

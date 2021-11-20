@@ -14,7 +14,7 @@ devtools::install_github("IntiQuan/populationIsoboles")
 
 ## Main algorithms
 
-* `grid_refinement`, in the publication referred to as *fastIsoboles*. See function documentation for fast examples.
+* `fastIsoboles`, in the publication referred to as *fastIsoboles*. See function documentation for fast examples.
 * `calculateCLRS`, in the publication referred to as *aggregateIsoboles*
 
 

@@ -25,7 +25,7 @@ library(IQRtools)
 
 An R-script version of this vignette and the resources are available in the folder `system.file("examples/Example-2", package = "populationIsoboles")`
 
-This vignette demonstrates how to use the fast isobole algorithm `grid_refinement` in the context of population simulation of NLME models.
+This vignette demonstrates how to use the fast isobole algorithm `fastIsoboles` in the context of population simulation of NLME models.
 The underlying PKPD model describes malaria parasite clearance by two drugs acting jointly.
 Implementing the model is less explicit than in the other vignette, where each step is outlined how to get from the individual simulation to the population isobole.
 With `IQRtools` out-of-the-box population simulation functionalities, one just needs to define the objective function which evaluates success rates for different doses, given a parameter set.
