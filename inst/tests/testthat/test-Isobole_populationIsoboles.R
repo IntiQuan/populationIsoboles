@@ -69,7 +69,7 @@ test_that("Vignette results are unchanged", {
       .outputFolder         = .outputFolder
     )
 
-    CLRS <- calculateCLRS(file.path(.outputFolder, "Simulations"))
+    CLRS <- aggregateIsoboles(file.path(.outputFolder, "Simulations"))
 
     # Compare CLRS to expectation
     CLRS_expectation <- readRDS("testdata/Expectations/test-populationIsoboles-CLRS.rds")

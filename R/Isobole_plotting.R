@@ -333,7 +333,7 @@ PI_readAreas <- function(.inputFolder, itermax_dt = PI_readItermax(.inputFolder)
 #' @importFrom data.table data.table
 #' @importFrom sp point.in.polygon
 #' @importFrom stats setNames
-calculateCLRS <- function(.inputFolder,
+aggregateIsoboles <- function(.inputFolder,
                           gridInfo = NULL,
                           finalPaths = NULL,
                           FLAGoverwriteQuantiles = determineRecalcNeccessary(.inputFolder = .inputFolder,
@@ -395,7 +395,7 @@ calculateCLRS <- function(.inputFolder,
 #' @param grid Result from [PI_readGridValues]
 #' @param allPaths Result from [PI_readAllPaths]
 #' @param itermax_dt Result from [PI_readItermax]
-#' @param grid_fine Result from [calculateCLRS]
+#' @param grid_fine Result from [aggregateIsoboles]
 #' @param Compound1,Compound2 Character. Compound name, for cases when it's not available in the Malaria project
 #' @param levels Vector of confidence levels, e.g. c(0.5,0.95). For plotRibbon, named vector with min and max, e.g. c(min = 0.025, max = 0.975)
 #' @param FLAGoverwriteQuantiles Redo the calculation of the quantiles?
@@ -591,7 +591,7 @@ PI_plotInternalMonoDistributions <- function(grid_fine, filename = NULL, ...) {
 
 #' See PI_plotInternalMonoDistributions
 #'
-#' @param grid_fine Output from calculateCLRS
+#' @param grid_fine Output from aggregateIsoboles
 #' @param cross_x,cross_y Doses at which the cross section should be evaluated
 #' @param filename,... going to [ggplot2::ggsave()]
 #'
@@ -647,7 +647,7 @@ plotRibbon <- function(.inputFolder, filename = NULL, levels = c(min = 0.025, ma
                                                                           fileToRecalc = "GLOBAL-101-percentages-grid_fine.rds"),
                        ...) {
 
-  grid_fine  <- calculateCLRS(.inputFolder, FLAGoverwriteQuantiles = FLAGoverwriteQuantiles)
+  grid_fine  <- aggregateIsoboles(.inputFolder, FLAGoverwriteQuantiles = FLAGoverwriteQuantiles)
 
   pl <- PI_plotInternalRibbon2(grid_fine, filename = filename, levels = levels, ...)
 
@@ -695,7 +695,7 @@ plotQuantiles <- function(.inputFolder, filename = NULL,
                           levels = c(.025,.5,.975),
                           ...) {
   finalPaths <- PI_getFinalPaths(PI_readAllPaths(.inputFolder, itermax_dt = PI_readItermax(.inputFolder)))
-  grid_fine  <- calculateCLRS(.inputFolder, finalPaths = finalPaths, FLAGoverwriteQuantiles = FLAGoverwriteQuantiles)
+  grid_fine  <- aggregateIsoboles(.inputFolder, finalPaths = finalPaths, FLAGoverwriteQuantiles = FLAGoverwriteQuantiles)
 
   PI_plotInternalQuantiles(grid_fine, finalPaths, filename = filename,levels = levels, ...)
 }
@@ -725,7 +725,7 @@ plotCLRS <- function(.inputFolder,
 ) {
 
   finalPaths <- PI_getFinalPaths(PI_readAllPaths(.inputFolder, itermax_dt = PI_readItermax(.inputFolder)))
-  grid_fine  <- calculateCLRS(.inputFolder, finalPaths = finalPaths, FLAGoverwriteQuantiles = FLAGoverwriteQuantiles)
+  grid_fine  <- aggregateIsoboles(.inputFolder, finalPaths = finalPaths, FLAGoverwriteQuantiles = FLAGoverwriteQuantiles)
   clrs <- unique(grid_fine[, list(x,y, percentages)])
 
   pl <- ggplot_PI(clrs, aes(x,y, fill= percentages)) +

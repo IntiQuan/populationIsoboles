@@ -28,7 +28,7 @@
 
 \item{itermax_dt}{Result from \link{PI_readItermax}}
 
-\item{grid_fine}{Result from \link{calculateCLRS}}
+\item{grid_fine}{Result from \link{aggregateIsoboles}}
 
 \item{levels}{Vector of confidence levels, e.g. c(0.5,0.95). For plotRibbon, named vector with min and max, e.g. c(min = 0.025, max = 0.975)}
 

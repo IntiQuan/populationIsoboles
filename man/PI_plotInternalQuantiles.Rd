@@ -15,7 +15,7 @@ PI_plotInternalQuantiles(
 )
 }
 \arguments{
-\item{grid_fine}{Result from \link{calculateCLRS}}
+\item{grid_fine}{Result from \link{aggregateIsoboles}}
 
 \item{finalPaths}{Result from \link{PI_getFinalPaths}}
 

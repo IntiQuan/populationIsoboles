@@ -13,7 +13,7 @@ PI_plotInternalCrossSections(
 )
 }
 \arguments{
-\item{grid_fine}{Output from calculateCLRS}
+\item{grid_fine}{Output from aggregateIsoboles}
 
 \item{cross_x, cross_y}{Doses at which the cross section should be evaluated}
 

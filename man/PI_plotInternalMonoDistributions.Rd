@@ -7,7 +7,7 @@
 PI_plotInternalMonoDistributions(grid_fine, filename = NULL, ...)
 }
 \arguments{
-\item{grid_fine}{Result from \link{calculateCLRS}}
+\item{grid_fine}{Result from \link{aggregateIsoboles}}
 
 \item{filename}{Path to save plot}
 
