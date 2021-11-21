@@ -44,6 +44,7 @@ runPopulationIsoboles <- function(
 
   # Loop over populations
   for (k in 1:Npop) {
+    if (FLAGverbose) cat("Population ", k," ------------------- \n")
     # Sample parameters
     parsIndiv <- do.call(sampleIndividuals, argsSampleIndividuals)
     # Define objective function which only takes arguments (AMTx1, AMTx2) and
