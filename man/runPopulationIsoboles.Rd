@@ -11,7 +11,8 @@ runPopulationIsoboles(
   objectiveFunction,
   sampleIndividuals,
   argsSampleIndividuals,
-  gridInfo = list(AMTx1Max = 1000, AMTx2Max = 1000),
+  gridInfo = list(AMTx1Max = 1000, AMTx2Max = 1000, offset = 0),
+  itermin = 4,
   itermax = 5,
   FLAGverbose = FALSE,
   .outputFolder = "."
@@ -31,9 +32,9 @@ where AMTx1, AMTx2 are numeric vectors and parsIndiv is the output of the suppli
 
 \item{argsSampleIndividuals}{List of arguments for \code{sampleIndividuals}}
 
-\item{gridInfo}{A list(AMTx1Max, AMTx2Max), specifying the searched grid dimensions}
+\item{gridInfo}{A list(AMTx1Max, AMTx2Max,offset), specifying the searched grid dimensions}
 
-\item{itermax}{Number of iterations for fastIsoboles algorithm}
+\item{itermin, itermax}{Number of iterations for fastIsoboles algorithm}
 
 \item{FLAGverbose}{print messages to console?}
 
