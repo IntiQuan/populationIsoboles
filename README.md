@@ -4,7 +4,10 @@
 ## Installation
 ```{r}
 if (!require("devtools")) install.packages("devtools")
+# Install without vignettes accessible via utils::vignette()
 devtools::install_github("IntiQuan/populationIsoboles")
+# Install with vignettes accessible via utils::vignette()
+devtools::install_github("IntiQuan/populationIsoboles", build_vignettes = TRUE)
 ```
 
 ## Vignettes
