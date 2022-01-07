@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+
 ```
 
 ```{r setup}
@@ -37,11 +38,13 @@ Finally, three different visualizations are shown.
 
 # Load Model and Parameter information
 ```{r model}
+# system.file("examples/Example-2", package = "populationIsoboles")
+
 # .. Model -----
-model <- IQRmodel("Resources/Model.txt")
+model <- IQRmodel(system.file(file.path("examples","Example-2","Resources","Model.txt"), package = "populationIsoboles"))
 
 # .. Parameter information -----
-parameterGPF <- load_GPF("Resources/Parameters.xlsx")
+parameterGPF <- load_GPF(system.file(file.path("examples","Example-2","Resources","Parameters.xlsx"), package = "populationIsoboles"))
 
 # .. Show the basic PKPD model for one parameter -----
 dosing <- IQRdosing(c(0,0), c(1,2), c(500,500))

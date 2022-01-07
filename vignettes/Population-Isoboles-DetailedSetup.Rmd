@@ -60,9 +60,9 @@ Finally, three different visualizations are shown.
 # Load Model and Parameter information
 ```{r model}
 # .. Model -----
-model <- source("Resources/modelDeparsed.R")$value
+model <- source(system.file(file.path("examples","Example-1","Resources","modelDeparsed.R"), package = "populationIsoboles"))$value
 # .. Parameter information -----
-parameterInfo <- source("Resources/parametersDeparsed.R")$value
+parameterInfo <- source(system.file(file.path("examples","Example-1","Resources","parametersDeparsed.R"), package = "populationIsoboles"))$value
 print(parameterInfo$theta[1:4]) # Theta = Point estimates of fixed effects
 print(parameterInfo$S[1:4,1:4])     # S     = Covariance matrix for Theta
 print(parameterInfo$Omega[1:4,1:4]) # Omega = Covariance matrix of random effects
