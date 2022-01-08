@@ -39,7 +39,7 @@ runPopulationIsoboles <- function(
   # Save for later use in plotting
   gridInfo <- gridInfo_default(AMTx1Max = gridInfo$AMTx1Max,
                                AMTx2Max = gridInfo$AMTx2Max,
-                               imax = itermax, offset = gridInfo$offset + 0)
+                               imax = itermax, offset = gridInfo$offset)
   saveRDS(gridInfo, file.path(.outputFolder, "Simulations", "001-GridInfo.rds"))
 
   # Loop over populations

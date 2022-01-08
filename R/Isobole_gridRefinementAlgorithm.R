@@ -13,6 +13,8 @@
 #' @examples
 #' populationIsoboles:::gridInfo_default()
 gridInfo_default <- function(AMTx1Max = 1000, AMTx2Max = 1000, imax = 7, offset = 1e-12) {
+  offset <- if(length(offset)) {offset} else 1e-12
+
   gridmin = c(x = offset, y = offset)
   gridmax = c(x = AMTx1Max, y = AMTx2Max)
   gridlens = get_gridlens(gridmin = gridmin, gridmax = gridmax, imax = imax)
